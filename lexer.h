@@ -16,7 +16,8 @@ enum class TokenType {
     COLON,
     INDENT,
     NEWLINE,
-    END_OF_FILE
+    END_OF_FILE,
+    WHITESPACE
 };
 
 struct Token {
@@ -36,8 +37,9 @@ struct Token {
             case TokenType::COLON: return "colon";
             case TokenType::INDENT: return "indent";
             case TokenType::NEWLINE: return "newline";
+            case TokenType::WHITESPACE: return "whitespace";
             case TokenType::END_OF_FILE: return "end of file";
-            default: return "token";
+            default: return "unknown token";
         }
     }
 };
@@ -52,8 +54,8 @@ private:
 
     char peek();
     char advance();
-    void skipWhitespace();
     Token readIdentifier();
+    Token readWhitespace();
     Token readNumber();
     Token readString();
 

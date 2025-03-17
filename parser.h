@@ -13,12 +13,13 @@ private:
     std::string fileContent;
     size_t pos;
 
-    Token peek(int offset);
-    Token advance();
+    Token peek(int offset, bool skipWhitespace);
+    Token advance(bool skipWhitespace);
     std::unique_ptr<ASTNode> parseExpression();
     std::unique_ptr<ASTNode> parseTerm();
     std::unique_ptr<ASTNode> parseFactor();
     std::unique_ptr<ASTNode> parseAssignment();
+    void handleSyntaxError(const Token& current);
 
 public:
     Parser(const std::vector<Token>& tokens, const std::string& fileName, const std::string& content);

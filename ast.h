@@ -21,6 +21,7 @@ struct ASTNode {
             case NodeType::STRING: return "String";
             case NodeType::NUMBER: return "Number";
             case NodeType::IDENTIFIER: return "Identifier";
+            case NodeType::KEYWORD: return "Keyword";
             case NodeType::BINARY_OP: return "BinaryOp";
             case NodeType::ASSIGNMENT: return "Assignment";
             default: return "Unknown";

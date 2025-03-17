@@ -7,7 +7,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/reic",
       "args": [
-        "test.reic"
+        "test.reic",
+        "-v"
       ],
       "setupCommands": [
         {

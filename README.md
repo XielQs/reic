@@ -19,5 +19,21 @@ make -j$(nproc) # use all available cores
 ## Usage
 
 ```bash
-./build/reic <source_file.reic>
+Usage: <filename> [-v|--verbose] [-h|--help] [-o <output_file>] [--compile] [--run]
+Options:
+  -v, --verbose   Enable verbose output
+  -h, --help      Show this help message
+  -o <filename>   Specify output file name
+      --compile   Compile the output file using clang
+      --run       Run file after compilation
 ```
+
+It uses `clang` to compile the generated C code because f#ck GCC.
+
+```bash
+
+## Features
+
+- Basic arithmetic operations (addition, subtraction, multiplication, division)
+- Variables (not really lol)
+- Printing to console (can't print numbers yet)
