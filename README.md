@@ -10,11 +10,18 @@ I call it Rei C because it compiles to C, and Rei is for Rei Ayanami from Neon G
 
 ## Build
 
-You can use `make` to build the project. It will create a `reic` executable in the `build` directory.
+You can use `cmake` to build the project. It will create a `reic` executable in the `build` directory.
 
 ```bash
-make -j$(nproc) # use all available cores
+git clone https://github.com/XielQs/reic
+cd reic
+mkdir build
+cd build
+cmake ..
+cmake --build . -j$(nproc) # use all cores
 ```
+
+I did NOT test this on Windows so good luck with that :3
 
 ## Usage
 
