@@ -11,7 +11,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
-#include <thread>
 
 bool isVerbose = false;
 

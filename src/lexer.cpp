@@ -1,5 +1,4 @@
 #include "lexer.h"
-#include <iostream>
 
 Lexer::Lexer(const std::string& src) : source(src), pos(0), lineNumber(1), columnNumber(1), keywords({"if", "while", "return", "print"}) {}
 
