@@ -1,5 +1,6 @@
-#ifndef LEXER_H
-#define LEXER_H
+#pragma once
+#ifndef LEXER_HPP
+#define LEXER_HPP
 
 #include <string>
 #include <vector>
@@ -21,10 +22,6 @@ enum class TokenType {
 };
 
 struct Token {
-    TokenType type;
-    std::string value;
-    size_t lineNumber;
-    size_t columnNumber;
     std::string humanize() const {
         switch (type) {
             case TokenType::IDENTIFIER: return "identifier";
@@ -42,16 +39,20 @@ struct Token {
             default: return "unknown token";
         }
     }
+
+    TokenType type;
+    std::string value;
+    size_t lineNumber;
+    size_t columnNumber;
 };
 
 class Lexer {
-private:
-    std::string source;
-    size_t pos;
-    size_t lineNumber;
-    size_t columnNumber;
-    std::unordered_set<std::string> keywords;
+public:
+    Lexer(const std::string& src);
 
+    std::vector<Token> tokenize();
+
+private:
     char peek();
     char advance();
     Token readIdentifier();
@@ -59,9 +60,11 @@ private:
     Token readNumber();
     Token readString();
 
-public:
-    Lexer(const std::string& src);
-    std::vector<Token> tokenize();
+    std::string source;
+    size_t pos;
+    size_t lineNumber;
+    size_t columnNumber;
+    std::unordered_set<std::string> keywords;
 };
 
-#endif // LEXER_H
+#endif // LEXER_HPP
