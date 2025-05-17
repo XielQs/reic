@@ -214,6 +214,7 @@ int main(int argc, char *argv[]) {
         double elapsedTime = timer.elapsed();
         timer.reset();
         if (result != 0) {
+            if (run) std::filesystem::remove(outputFileName);
             std::cerr << "[error]: Compilation failed." << std::endl;
             return 1;
         }

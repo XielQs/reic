@@ -88,17 +88,17 @@ std::vector<std::string> CodeGenerator::generateCodeForNode(ASTNode* node) {
         }
 
         if (resolvedVarType.empty() || resolvedVarType == "void") {
-             std::cerr << "[warn]: Could not reliably infer C type for RHS of assignment to '" << varName << "'. Defaulting to int." << std::endl;
-             resolvedVarType = "int"; // Fallback type
+            std::cerr << "[warn]: Could not reliably infer C type for RHS of assignment to '" << varName << "'. Defaulting to int." << std::endl;
+            resolvedVarType = "int"; // Fallback type
         }
 
         variableTypes[varName] = resolvedVarType; // Store/update variable's C type
 
         if (declaredVariables.find(varName) == declaredVariables.end()) {
-             code.push_back(resolvedVarType + " " + varName + " = " + valueCode + ";");
-             declaredVariables.insert(varName);
+            code.push_back(resolvedVarType + " " + varName + " = " + valueCode + ";");
+            declaredVariables.insert(varName);
         } else {
-             code.push_back(varName + " = " + valueCode + ";"); // Re-assignment
+            code.push_back(varName + " = " + valueCode + ";"); // Re-assignment
         }
     } else if (auto stringNode = dynamic_cast<StringNode*>(node)) {
         code.push_back("\"" + stringNode->value + "\"");
