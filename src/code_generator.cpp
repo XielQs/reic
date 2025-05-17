@@ -69,12 +69,36 @@ std::vector<std::string> CodeGenerator::generateCodeForNode(ASTNode* node) {
 
     if (auto assignmentNode = dynamic_cast<AssignmentNode*>(node)) {
         std::string varName = assignmentNode->variable;
-        std::string valueCode = generateCodeForNode(assignmentNode->value.get())[0];
-        std::string varType = inferType(assignmentNode->value.get());
-        if (varType.empty()) {
-            code.push_back(varName + " = " + valueCode + ";");
+        ASTNode* rhsNode = assignmentNode->value.get();
+        std::string valueCode = generateCodeForNode(rhsNode)[0];
+        std::string resolvedVarType;
+
+        if (rhsNode->type == NodeType::IDENTIFIER) {
+            auto rhsIdentifierNode = dynamic_cast<IdentifierNode*>(rhsNode);
+            if (variableTypes.count(rhsIdentifierNode->name)) {
+                resolvedVarType = variableTypes[rhsIdentifierNode->name];
+            } else {
+                // Attempting to use an undeclared variable on the RHS.
+                // This should ideally be an error caught earlier.
+                std::cerr << "[warn]: Variable '" << rhsIdentifierNode->name << "' used on RHS of assignment to '" << varName << "' has unknown type. Defaulting to int." << std::endl;
+                resolvedVarType = "int"; // Defaulting, but this is risky.
+            }
         } else {
-            code.push_back(varType + " " + varName + " = " + valueCode + ";");
+            resolvedVarType = inferType(rhsNode);
+        }
+
+        if (resolvedVarType.empty() || resolvedVarType == "void") {
+             std::cerr << "[warn]: Could not reliably infer C type for RHS of assignment to '" << varName << "'. Defaulting to int." << std::endl;
+             resolvedVarType = "int"; // Fallback type
+        }
+
+        variableTypes[varName] = resolvedVarType; // Store/update variable's C type
+
+        if (declaredVariables.find(varName) == declaredVariables.end()) {
+             code.push_back(resolvedVarType + " " + varName + " = " + valueCode + ";");
+             declaredVariables.insert(varName);
+        } else {
+             code.push_back(varName + " = " + valueCode + ";"); // Re-assignment
         }
     } else if (auto stringNode = dynamic_cast<StringNode*>(node)) {
         code.push_back("\"" + stringNode->value + "\"");
@@ -98,14 +122,57 @@ std::vector<std::string> CodeGenerator::generateCodeForNode(ASTNode* node) {
             ASTNode* nextNode = peek(1);
             if (nextNode) {
                 std::string printArg = generateCodeForNode(nextNode)[0];
-                // todo: handle different types
-                code.push_back("printf(\"%s\\n\", " + printArg + ");");
+                std::string cTypeToPrint;
+
+                switch (nextNode->type) {
+                    case NodeType::STRING:
+                        cTypeToPrint = "char*";
+                        break;
+                    case NodeType::NUMBER:
+                        cTypeToPrint = "int";
+                        break;
+                    case NodeType::BINARY_OP: // Assuming binary operations result in int
+                        cTypeToPrint = "int";
+                        break;
+                    case NodeType::IDENTIFIER: {
+                        auto idNode = dynamic_cast<IdentifierNode*>(nextNode);
+                        if (variableTypes.count(idNode->name)) {
+                            cTypeToPrint = variableTypes[idNode->name];
+                        } else {
+                            std::cerr << "[warn]: Printing undeclared variable '" << idNode->name << "'. Type unknown, cannot generate print statement." << std::endl;
+                            cTypeToPrint = "unknown_type"; // Mark as unknown
+                        }
+                        break;
+                    }
+                    default:
+                        std::cerr << "[warn]: Attempting to print an unsupported AST node type: " << nextNode->getType() << ". Cannot generate print statement." << std::endl;
+                        cTypeToPrint = "unsupported_type"; // Mark as unsupported
+                        break;
+                }
+
+                std::string formatSpecifier;
+                if (cTypeToPrint == "int") {
+                    formatSpecifier = "%d";
+                } else if (cTypeToPrint == "char*") {
+                    formatSpecifier = "%s";
+                } else {
+                    if (cTypeToPrint != "unknown_type" && cTypeToPrint != "unsupported_type") {
+                        // This case means a known variable has a C type we don't explicitly handle for printing yet.
+                        std::cerr << "[warn]: Variable '" << printArg << "' has C type '" << cTypeToPrint << "' which may not print correctly with default format. Defaulting to %s." << std::endl;
+                        formatSpecifier = "%s"; // Default for other C types, might be incorrect.
+                    }
+                    // If type is "unknown_type" or "unsupported_type", formatSpecifier remains empty, and no printf is generated.
+                }
+
+                if (!formatSpecifier.empty()) {
+                    code.push_back("printf(\"" + formatSpecifier + "\\n\", " + printArg + ");");
+                }
                 advance(); // Skip the next node since it's already processed
             } else {
                 std::cerr << "[warn]: Missing argument for print statement" << std::endl;
             }
         } else {
-            std::cerr << "[warn]: Unknown keyword: " << keywordNode->name << std::endl;
+            std::cerr << "[warn]: Unsupported keyword: " << keywordNode->name << std::endl;
         }
     } else {
         std::cerr << "[warn]: Unknown AST node type" << std::endl;
