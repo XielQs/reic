@@ -1,8 +1,9 @@
 #define EXTENSION_NAME ".reic"
 
-#include "parser.h"
-#include "lexer.h"
-#include "code_generator.h"
+#include "parser.hpp"
+#include "lexer.hpp"
+#include "code_generator.hpp"
+#include "timer.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,28 +11,8 @@
 #include <format>
 #include <cstdlib>
 #include <ctime>
-#include <chrono>
 
 bool isVerbose = false;
-
-// todo: move to a separate file
-class Timer {
-public:
-    Timer() : start(std::chrono::high_resolution_clock::now()) {}
-
-    void reset() {
-        start = std::chrono::high_resolution_clock::now();
-    }
-
-    double elapsed() const {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        return static_cast<double>(duration.count()) / 1000.0;
-    }
-
-private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> start;
-};
 
 void verbose(const std::string &message) {
     if (!isVerbose) return;
@@ -129,7 +110,7 @@ int main(int argc, char *argv[]) {
     }
 
     std::string filename = argv[1];
-    std::string outputFileName = filename.substr(0, filename.find_last_of('.')) + ".c";
+    std::string outputFileName = std::filesystem::path(filename).stem().string() + ".c";
     bool compile = false;
     bool run = false;
 
@@ -165,7 +146,7 @@ int main(int argc, char *argv[]) {
     std::string content;
 
     //* get absolute path
-    filename = std::filesystem::absolute(filename).string();
+    filename = std::filesystem::absolute(filename).lexically_normal().string();
 
     tryReadFile(filename, &content);
 
@@ -208,9 +189,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (run) {
-        std::string outputFileName = std::filesystem::temp_directory_path().string() + "/" + generateRandomString(8) + ".c";
+    if (outputFileName[0] == '/') {
+        outputFileName = std::filesystem::absolute(outputFileName).string();
     }
+
+    if (run) {
+        outputFileName = std::filesystem::temp_directory_path().string() + "/" + generateRandomString(8) + ".c";
+    }
+
     verbose(std::format("Output file: {}", outputFileName));
     std::ofstream outputFile(outputFileName);
     if (!outputFile) {
@@ -233,10 +219,11 @@ int main(int argc, char *argv[]) {
         }
         std::cout << std::format("Compiled development build [notstripped + debuginfo] in {:.2f}s", elapsedTime) << std::endl;
         if (run) {
-            std::string runCommand = "./" + outputFileName.substr(0, outputFileName.find_last_of('.'));
+            std::string executablePath = outputFileName.substr(0, outputFileName.find_last_of('.'));
             std::cout << "Running build" << std::endl;
-            int runResult = std::system(runCommand.c_str());
+            int runResult = std::system(executablePath.c_str());
             std::filesystem::remove(outputFileName);
+            std::filesystem::remove(executablePath);
             if (runResult != 0) {
                 std::cerr << "[error]: Execution failed." << std::endl;
                 return 1;

@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "ast.h"
+#include "ast.hpp"
 
 class CodeGenerator {
 public:
