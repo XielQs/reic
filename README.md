@@ -42,5 +42,5 @@ It uses `clang` to compile the generated C code because f#ck GCC.
 ```bash
 - Basic arithmetic operations (addition, subtraction, multiplication, division)
 - Variables (not really lol)
-- Printing to console (can't print numbers yet)
+- Printing to console
 ```
